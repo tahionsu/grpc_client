@@ -5,6 +5,8 @@ import io.grpc.ManagedChannelBuilder;
 import com.example.grpc.GreetingServiceGrpc;
 import com.example.grpc.GreetingServiceOuterClass;
 
+import java.util.Iterator;
+
 public class Client {
     public static void main(String[] args) {
         ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8080")
@@ -14,12 +16,13 @@ public class Client {
         GreetingServiceGrpc.GreetingServiceBlockingStub stub =
                 GreetingServiceGrpc.newBlockingStub(channel);
 
-        GreetingServiceOuterClass.HelloRequest request = 
+        GreetingServiceOuterClass.HelloRequest request =
                 GreetingServiceOuterClass.HelloRequest.newBuilder().setName("Neil").build();
 
-        GreetingServiceOuterClass.HelloResponse response = stub.greeting(request);
+        Iterator<GreetingServiceOuterClass.HelloResponse> response = stub.greeting(request);
 
-        System.out.println(response);
+        while (response.hasNext())
+            System.out.println(response.next());
 
         channel.shutdown();
     }
