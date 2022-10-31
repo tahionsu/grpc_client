@@ -6,6 +6,7 @@ import com.example.grpc.GreetingServiceGrpc;
 import com.example.grpc.GreetingServiceOuterClass;
 
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
     public static void main(String[] args) {
@@ -14,7 +15,7 @@ public class Client {
                 .build();
 
         GreetingServiceGrpc.GreetingServiceBlockingStub stub =
-                GreetingServiceGrpc.newBlockingStub(channel);
+                GreetingServiceGrpc.newBlockingStub(channel).withDeadlineAfter(1000, TimeUnit.MILLISECONDS);
 
         GreetingServiceOuterClass.HelloRequest request =
                 GreetingServiceOuterClass.HelloRequest.newBuilder().setName("Neil").build();
