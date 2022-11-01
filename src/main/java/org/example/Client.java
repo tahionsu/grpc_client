@@ -2,28 +2,48 @@ package org.example;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import com.example.grpc.GreetingServiceGrpc;
-import com.example.grpc.GreetingServiceOuterClass;
+import com.example.grpc.CoffeeServiceGrpc;
+import com.example.grpc.CoffeeServiceOuterClass;
 
-import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 
 public class Client {
     public static void main(String[] args) {
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8080")
+        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8081")
                 .usePlaintext()
                 .build();
 
-        GreetingServiceGrpc.GreetingServiceBlockingStub stub =
-                GreetingServiceGrpc.newBlockingStub(channel).withDeadlineAfter(1000, TimeUnit.MILLISECONDS);
+        CoffeeServiceGrpc.CoffeeServiceBlockingStub stub =
+                CoffeeServiceGrpc.newBlockingStub(channel);
 
-        GreetingServiceOuterClass.HelloRequest request =
-                GreetingServiceOuterClass.HelloRequest.newBuilder().setName("Neil").build();
+        CoffeeServiceOuterClass.CoffeeGetRequest requestGet =
+                CoffeeServiceOuterClass.CoffeeGetRequest.newBuilder().setId(10).build();
 
-        Iterator<GreetingServiceOuterClass.HelloResponse> response = stub.greeting(request);
+        CoffeeServiceOuterClass.CoffeeGetResponse responseGet = stub.getCoffee(requestGet);
 
-        while (response.hasNext())
-            System.out.println(response.next());
+        System.out.println(responseGet.getId());
+        System.out.println(responseGet.getName());
+        System.out.println(responseGet.getDescription());
+
+        CoffeeServiceOuterClass.CoffeePostRequest requestPost =
+                CoffeeServiceOuterClass.CoffeePostRequest.newBuilder()
+                        .setName("Test-coffee-pro-limited-blend")
+                        .setDescription(responseGet.getDescription())
+                        .build();
+
+        CoffeeServiceOuterClass.CoffeePostResponse responsePost = stub.addCoffee(requestPost);
+
+        System.out.println(responsePost.getId());
+
+        CoffeeServiceOuterClass.CoffeeDelRequest requestDel =
+                CoffeeServiceOuterClass.CoffeeDelRequest.newBuilder()
+                        .setId(4)
+                        .build();
+
+        CoffeeServiceOuterClass.CoffeeDelResponse responseDel = stub.delCoffee(requestDel);
+
+        System.out.println(responseDel.getRetCode());
+
+
 
         channel.shutdown();
     }
