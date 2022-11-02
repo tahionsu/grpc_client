@@ -1,50 +1,40 @@
 package org.example;
 
+import com.example.grpc.CoffeeServiceOuterClass;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import com.example.grpc.CoffeeServiceGrpc;
-import com.example.grpc.CoffeeServiceOuterClass;
+import io.grpc.StatusRuntimeException;
+import org.example.client.Client;
+import org.example.json.CustomJSON;
 
 
-public class Client {
+public class Main {
     public static void main(String[] args) {
-        ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8081")
-                .usePlaintext()
-                .build();
+        try {
 
-        CoffeeServiceGrpc.CoffeeServiceBlockingStub stub =
-                CoffeeServiceGrpc.newBlockingStub(channel);
+            ManagedChannel channel = ManagedChannelBuilder.forTarget("localhost:8081")
+                    .usePlaintext()
+                    .build();
 
-        CoffeeServiceOuterClass.CoffeeGetRequest requestGet =
-                CoffeeServiceOuterClass.CoffeeGetRequest.newBuilder().setId(10).build();
+            CoffeeServiceOuterClass.CoffeeGetResponse responseGet = Client.getRequest(5, channel);
 
-        CoffeeServiceOuterClass.CoffeeGetResponse responseGet = stub.getCoffee(requestGet);
+            System.out.println("id: " + responseGet.getId());
+            System.out.println("name: " + responseGet.getName());
+            System.out.println("description: \n" + responseGet.getDescription());
 
-        System.out.println(responseGet.getId());
-        System.out.println(responseGet.getName());
-        System.out.println(responseGet.getDescription());
+            CoffeeServiceOuterClass.CoffeePostResponse responsePost =
+                    Client.addRequest("Lavazza", responseGet.getDescription(), channel);
 
-        CoffeeServiceOuterClass.CoffeePostRequest requestPost =
-                CoffeeServiceOuterClass.CoffeePostRequest.newBuilder()
-                        .setName("Test-coffee-pro-limited-blend")
-                        .setDescription(responseGet.getDescription())
-                        .build();
+            System.out.println(responsePost.getId());
 
-        CoffeeServiceOuterClass.CoffeePostResponse responsePost = stub.addCoffee(requestPost);
+            CoffeeServiceOuterClass.CoffeeDelResponse retCode = Client.delRequest(10, channel);
 
-        System.out.println(responsePost.getId());
+            System.out.println(retCode.getRetCode());
 
-        CoffeeServiceOuterClass.CoffeeDelRequest requestDel =
-                CoffeeServiceOuterClass.CoffeeDelRequest.newBuilder()
-                        .setId(4)
-                        .build();
+            channel.shutdown();
 
-        CoffeeServiceOuterClass.CoffeeDelResponse responseDel = stub.delCoffee(requestDel);
-
-        System.out.println(responseDel.getRetCode());
-
-
-
-        channel.shutdown();
+        } catch (StatusRuntimeException exception) {
+            System.out.println(exception.getMessage());
+        }
     }
 }
